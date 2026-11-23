@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import { useAuth } from '../features/auth/AuthContext';
+import { assetUrl } from '../services/api';
 
 interface NavItem {
   label: string;
@@ -77,7 +78,7 @@ export function PortalLayout({
     <div className="flex flex-col h-full bg-[#243B64] text-white">
       <div className="px-5 py-4 border-b border-white/10 flex items-center gap-3">
         <img
-          src="/assets/aistudio/logoku_6b323412.png"
+          src={assetUrl('assets/aistudio/logoku_6b323412.png')}
           alt="SMP Kartini 1 Batam Logo"
           className="w-10 h-10 object-contain rounded-full bg-white p-0.5 shrink-0"
           referrerPolicy="no-referrer"

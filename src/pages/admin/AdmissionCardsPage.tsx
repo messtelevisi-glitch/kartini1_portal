@@ -4,7 +4,7 @@ import jsPDF from 'jspdf';
 import { Download, Printer, RefreshCw } from 'lucide-react';
 import { PortalLayout } from '../../layouts/PortalLayout';
 import { useToast } from '../../components/ui/ToastProvider';
-import { apiRequest } from '../../services/api';
+import { apiRequest, assetUrl } from '../../services/api';
 import type { StudentItem } from '../../types/exam';
 
 interface AdmissionCardRow {
@@ -286,7 +286,7 @@ export function AdmissionCardsPage() {
               {/* Formal Header */}
               <div className="bg-[#243B64] text-white px-3 py-2 flex items-center gap-2.5">
                 <img
-                  src="/assets/aistudio/logoku_6b323412.png"
+                  src={assetUrl('assets/aistudio/logoku_6b323412.png')}
                   alt="SMP Kartini 1 Batam Logo"
                   className="w-8 h-8 object-contain bg-white rounded-full p-0.5 shrink-0"
                   referrerPolicy="no-referrer"
@@ -303,7 +303,7 @@ export function AdmissionCardsPage() {
                   </p>
                 </div>
                 <img
-                  src="/assets/aistudio/LOGO_YKB_RESOLUSI_BESAR_d340cd5e.png"
+                  src={assetUrl('assets/aistudio/LOGO_YKB_RESOLUSI_BESAR_d340cd5e.png')}
                   alt="YKB Logo"
                   className="w-7 h-7 object-contain bg-white/95 rounded p-0.5 shrink-0"
                   referrerPolicy="no-referrer"

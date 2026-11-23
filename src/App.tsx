@@ -89,7 +89,7 @@ export default function App() {
     <PortalErrorBoundary>
       <ToastProvider>
         <AuthProvider>
-          <BrowserRouter>
+          <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/+$/, '') || '/'}>
             <Routes>
               {/* Default to Student Exam Access */}
               <Route path="/" element={<Navigate to="/student/access" replace />} />

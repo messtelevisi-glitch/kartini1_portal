@@ -14,7 +14,7 @@ import {
 } from 'lucide-react';
 import { ConfirmModal, Modal } from '../../components/ui/Modal';
 import { useToast } from '../../components/ui/ToastProvider';
-import { apiRequest, getStudentToken, setStudentToken } from '../../services/api';
+import { apiRequest, assetUrl, getStudentToken, setStudentToken } from '../../services/api';
 import { examAlarm } from '../../utils/alarmAudio';
 import type { StudentAnswerPayload, StudentSanitizedQuestion } from '../../types/exam';
 
@@ -386,7 +386,7 @@ export function StudentExamPage() {
       <div className="min-h-screen bg-[#F1F4F8] flex items-center justify-center p-4">
         <div className="max-w-lg w-full bg-white border border-slate-200 rounded-xl p-8 text-center space-y-4">
           <img
-            src="/assets/aistudio/logoku_6b323412.png"
+            src={assetUrl('assets/aistudio/logoku_6b323412.png')}
             alt="SMP Kartini 1 Batam Logo"
             className="w-16 h-16 object-contain mx-auto"
             referrerPolicy="no-referrer"
@@ -455,7 +455,7 @@ export function StudentExamPage() {
         <div className="max-w-[1440px] mx-auto flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
             <img
-              src="/assets/aistudio/logoku_6b323412.png"
+              src={assetUrl('assets/aistudio/logoku_6b323412.png')}
               alt="SMP Kartini 1 Batam"
               className="w-9 h-9 object-contain shrink-0"
               referrerPolicy="no-referrer"

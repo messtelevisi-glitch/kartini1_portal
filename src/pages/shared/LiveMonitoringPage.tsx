@@ -4,7 +4,7 @@ import { PortalLayout } from '../../layouts/PortalLayout';
 import { DataTable, type ColumnDef } from '../../components/ui/DataTable';
 import { Modal } from '../../components/ui/Modal';
 import { useToast } from '../../components/ui/ToastProvider';
-import { apiRequest, getActiveAuthHeader } from '../../services/api';
+import { apiRequest, getActiveAuthHeader, wsUrl } from '../../services/api';
 
 interface AttemptMonitorRow {
   id: number;
@@ -67,8 +67,7 @@ export function LiveMonitoringPage() {
       const authHeader = await getActiveAuthHeader();
       if (!authHeader || closed) return;
       const token = authHeader.replace(/^Bearer\s+/i, '');
-      const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      ws = new WebSocket(`${proto}//${window.location.host}/ws/monitoring?token=${encodeURIComponent(token)}`);
+      ws = new WebSocket(wsUrl(`/ws/monitoring?token=${encodeURIComponent(token)}`));
 
       ws.onopen = () => setWsConnected(true);
       ws.onclose = () => setWsConnected(false);

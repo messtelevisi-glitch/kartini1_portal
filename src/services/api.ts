@@ -32,11 +32,42 @@ export async function getActiveAuthHeader(): Promise<string | null> {
   return null;
 }
 
+const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/+$/, '');
+
+export function assetUrl(path: string): string {
+  const base = import.meta.env.BASE_URL || '/';
+  const cleanBase = base.endsWith('/') ? base : `${base}/`;
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  return `${cleanBase}${cleanPath}`;
+}
+
+export function apiUrl(path: string): string {
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  return `${API_BASE_URL}${normalized}`;
+}
+
+export function wsUrl(path: string): string {
+  const normalized = path.startsWith('/') ? path : `/${path}`;
+  if (API_BASE_URL) {
+    const parsed = new URL(API_BASE_URL);
+    const proto = parsed.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${proto}//${parsed.host}${normalized}`;
+  }
+  const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+  return `${proto}//${window.location.host}${normalized}`;
+}
+
 async function handleResponse<T>(res: Response): Promise<T> {
   const contentType = res.headers.get('content-type') || '';
   const data = contentType.includes('application/json') ? await res.json() : await res.text();
   if (!res.ok) {
-    const msg = typeof data === 'object' && data && 'error' in data ? String((data as any).error) : `Request failed (${res.status})`;
+    let msg =
+      typeof data === 'object' && data && 'error' in data
+        ? String((data as any).error)
+        : `Request failed (${res.status})`;
+    if (res.status === 404 && !contentType.includes('application/json') && !API_BASE_URL) {
+      msg = 'Backend API tidak tersedia pada hosting statis. Hubungkan VITE_API_BASE_URL atau jalankan aplikasi pada server Node.js (Cloud Run / VPS).';
+    }
     const err = new Error(msg) as Error & { status?: number; payload?: unknown };
     err.status = res.status;
     err.payload = data;
@@ -62,7 +93,7 @@ export async function apiRequest<T>(
     headers.set('Authorization', `Bearer ${studentToken}`);
   }
 
-  const res = await fetch(path, {
+  const res = await fetch(apiUrl(path), {
     ...options,
     headers,
   });
@@ -86,7 +117,7 @@ export async function uploadMediaFile(
   const auth = await getActiveAuthHeader();
   return new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
-    xhr.open('POST', '/api/media/upload');
+    xhr.open('POST', apiUrl('/api/media/upload'));
     if (auth) xhr.setRequestHeader('Authorization', auth);
 
     xhr.upload.onprogress = (ev) => {

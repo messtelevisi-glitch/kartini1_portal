@@ -1,13 +1,20 @@
-name: CI Build & Verify
+name: CI Build & Deploy Pages
 
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
   build-and-lint:
@@ -27,5 +34,35 @@ jobs:
       - name: TypeScript typecheck
         run: npm run lint
 
-      - name: Production Vite build
+      - name: Production Vite build (GitHub Pages subpath)
+        env:
+          VITE_BASE_PATH: /${{ github.event.repository.name }}/
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
         run: npm run build
+
+      - name: Prepare SPA fallback for GitHub Pages
+        run: |
+          cp dist/index.html dist/404.html
+          touch dist/.nojekyll
+
+      - name: Configure GitHub Pages
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./dist
+
+  deploy-pages:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    needs: build-and-lint
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

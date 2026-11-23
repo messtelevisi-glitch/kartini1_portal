@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, KeyRound, Lock, ShieldCheck, UserCheck } from 'lucide-react';
 import { useAuth } from '../features/auth/AuthContext';
 import { useToast } from '../components/ui/ToastProvider';
+import { assetUrl } from '../services/api';
 
 export function StaffLoginPage({ portalRole }: { portalRole: 'admin' | 'teacher' }) {
   const { user, hasClaimedAdmin, loginWithCredentials, claimInitialAdmin, loginWithGoogle } = useAuth();
@@ -81,7 +82,7 @@ export function StaffLoginPage({ portalRole }: { portalRole: 'admin' | 'teacher'
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-8">
           <Link to="/student/access" className="flex items-center gap-3 whitespace-nowrap shrink-0">
             <img
-              src="/assets/aistudio/logoku_6b323412.png"
+              src={assetUrl('assets/aistudio/logoku_6b323412.png')}
               alt="SMP Kartini 1 Batam Logo"
               className="w-9 h-9 object-contain"
               referrerPolicy="no-referrer"
@@ -123,13 +124,13 @@ export function StaffLoginPage({ portalRole }: { portalRole: 'admin' | 'teacher'
             <div>
               <div className="flex items-center gap-3 mb-6">
                 <img
-                  src="/assets/aistudio/logoku_6b323412.png"
+                  src={assetUrl('assets/aistudio/logoku_6b323412.png')}
                   alt="SMP Kartini 1 Batam Crest"
                   className="w-14 h-14 object-contain bg-white rounded-full p-1"
                   referrerPolicy="no-referrer"
                 />
                 <img
-                  src="/assets/aistudio/LOGO_YKB_RESOLUSI_BESAR_d340cd5e.png"
+                  src={assetUrl('assets/aistudio/LOGO_YKB_RESOLUSI_BESAR_d340cd5e.png')}
                   alt="Yayasan Keluarga Batam Logo"
                   className="w-12 h-12 object-contain bg-white/95 rounded-lg p-1"
                   referrerPolicy="no-referrer"

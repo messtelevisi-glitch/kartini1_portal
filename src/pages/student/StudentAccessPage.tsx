@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Clock, KeyRound, ShieldAlert, Volume2 } from 'lucide-react';
 import { useToast } from '../../components/ui/ToastProvider';
-import { apiRequest, setStudentToken } from '../../services/api';
+import { apiRequest, assetUrl, setStudentToken } from '../../services/api';
 import { examAlarm } from '../../utils/alarmAudio';
 
 interface UpcomingSchedule {
@@ -136,7 +136,7 @@ export function StudentAccessPage() {
         <div className="max-w-6xl mx-auto flex items-center justify-between gap-8">
           <div className="flex items-center gap-3 whitespace-nowrap shrink-0">
             <img
-              src="/assets/aistudio/logoku_6b323412.png"
+              src={assetUrl('assets/aistudio/logoku_6b323412.png')}
               alt="SMP Kartini 1 Batam Logo"
               className="w-9 h-9 object-contain"
               referrerPolicy="no-referrer"
@@ -175,7 +175,7 @@ export function StudentAccessPage() {
             <div className="lg:col-span-3 bg-white border border-slate-200 rounded-xl p-7">
               <div className="flex items-center gap-3 pb-5 mb-5 border-b border-slate-100">
                 <img
-                  src="/assets/aistudio/logoku_6b323412.png"
+                  src={assetUrl('assets/aistudio/logoku_6b323412.png')}
                   alt="SMP Kartini 1 Batam Crest"
                   className="w-12 h-12 object-contain"
                   referrerPolicy="no-referrer"
@@ -302,7 +302,7 @@ export function StudentAccessPage() {
                 <h2 className="text-xl font-bold text-[#243B64] mt-0.5">{confirmation.examTitle}</h2>
               </div>
               <img
-                src="/assets/aistudio/logoku_6b323412.png"
+                src={assetUrl('assets/aistudio/logoku_6b323412.png')}
                 alt="SMP Kartini 1 Batam"
                 className="w-11 h-11 object-contain"
                 referrerPolicy="no-referrer"
