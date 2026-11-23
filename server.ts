@@ -13,8 +13,10 @@ async function startServer() {
   app.use(express.json({ limit: '15mb' }));
   app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 
-  const allowedOrigins = (process.env.CORS_ORIGIN || '')
-    .split(',')
+  const allowedOrigins = [
+    'https://messtelevisi-glitch.github.io',
+    ...(process.env.CORS_ORIGIN || '').split(','),
+  ]
     .map((o) => o.trim().replace(/\/+$/, ''))
     .filter(Boolean);
   if (allowedOrigins.length > 0) {
