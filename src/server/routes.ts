@@ -186,6 +186,26 @@ export function createApiRouter(): Router {
   const router = Router();
 
   // ==========================================
+  // 0. HEALTH CHECK (Cloud Run / Render / CI)
+  // ==========================================
+  router.get('/health', async (_req, res) => {
+    try {
+      await db.execute(sql`SELECT 1`);
+      res.json({
+        status: 'ok',
+        database: 'connected',
+        timestamp: new Date().toISOString(),
+      });
+    } catch {
+      res.status(503).json({
+        status: 'degraded',
+        database: 'unreachable',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  });
+
+  // ==========================================
   // 1. AUTHENTICATION & FIRST-RUN BOOTSTRAP
   // ==========================================
 

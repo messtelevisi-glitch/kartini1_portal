@@ -1,0 +1,51 @@
+name: Database Schema Sync (Drizzle)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  push-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check database secrets
+        id: check
+        env:
+          SQL_HOST: ${{ secrets.SQL_HOST }}
+          SQL_DB_NAME: ${{ secrets.SQL_DB_NAME }}
+          SQL_ADMIN_USER: ${{ secrets.SQL_ADMIN_USER }}
+          SQL_ADMIN_PASSWORD: ${{ secrets.SQL_ADMIN_PASSWORD }}
+        run: |
+          if [ -n "$SQL_HOST" ] && [ -n "$SQL_DB_NAME" ] && [ -n "$SQL_ADMIN_USER" ] && [ -n "$SQL_ADMIN_PASSWORD" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Database Schema Sync Dilewati"
+              echo "Untuk menjalankan sinkronisasi skema Drizzle dari GitHub Actions, tambahkan secrets: \`SQL_HOST\`, \`SQL_DB_NAME\`, \`SQL_ADMIN_USER\`, dan \`SQL_ADMIN_PASSWORD\`."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Setup Node.js 22
+        if: steps.check.outputs.configured == 'true'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        if: steps.check.outputs.configured == 'true'
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+
+      - name: Push Drizzle schema to PostgreSQL
+        if: steps.check.outputs.configured == 'true'
+        env:
+          SQL_HOST: ${{ secrets.SQL_HOST }}
+          SQL_DB_NAME: ${{ secrets.SQL_DB_NAME }}
+          SQL_ADMIN_USER: ${{ secrets.SQL_ADMIN_USER }}
+          SQL_ADMIN_PASSWORD: ${{ secrets.SQL_ADMIN_PASSWORD }}
+        run: npx drizzle-kit push --config=src/db/drizzle.config.ts --force

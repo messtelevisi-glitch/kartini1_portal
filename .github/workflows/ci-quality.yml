@@ -1,0 +1,71 @@
+name: CI Quality, Server & Docker Verify
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify-code-and-configs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Validate JSON configuration files
+        run: |
+          node -e '
+            const fs = require("fs");
+            for (const f of ["package.json", "tsconfig.json", "metadata.json", "firebase-applet-config.json"]) {
+              if (fs.existsSync(f)) {
+                JSON.parse(fs.readFileSync(f, "utf8"));
+                console.log("Valid JSON:", f);
+              }
+            }
+          '
+
+      - name: Validate SQL migration assets
+        run: |
+          test -s supabase/migrations/001_initial_schema.sql
+          test -s supabase/migrations/002_rls_policies.sql
+          echo "SQL migration files verified."
+
+      - name: Install dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+
+      - name: TypeScript typecheck
+        run: npm run lint
+
+      - name: Verify production Vite build (root path)
+        run: npm run build
+
+      - name: Verify native Node 22 server module resolution
+        run: |
+          node --input-type=module -e '
+            await import("./src/db/schema.ts");
+            await import("./src/server/auth.ts");
+            await import("./src/server/realtime.ts");
+            await import("./src/server/routes.ts");
+            console.log("All Node 22 server modules loaded cleanly.");
+            process.exit(0);
+          '
+
+  verify-docker-build:
+    needs: verify-code-and-configs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify production Docker image builds cleanly
+        run: docker build -t kartini-exam-portal:ci .

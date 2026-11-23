@@ -1,0 +1,103 @@
+name: Deploy Full-Stack to Google Cloud Run
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: cloudrun-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy-cloud-run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Google Cloud deployment configuration
+        id: check
+        env:
+          GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+        run: |
+          if [ -n "$GCP_SA_KEY" ] && [ -n "$GCP_PROJECT_ID" ]; then
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+            {
+              echo "### Google Cloud Run Deploy Dilewati (Secrets Belum Diisi)"
+              echo "Tambahkan **Repository Secrets** berikut di GitHub agar workflow ini otomatis men-deploy server Node.js full-stack ke Google Cloud Run:"
+              echo "- \`GCP_PROJECT_ID\` — ID proyek Google Cloud Anda"
+              echo "- \`GCP_SA_KEY\` — JSON key Service Account (role: Cloud Run Admin, Cloud Build Editor, Artifact Registry Writer, Service Account User)"
+              echo "- \`DATABASE_URL\` (atau \`SQL_HOST\`, \`SQL_USER\`, \`SQL_PASSWORD\`, \`SQL_DB_NAME\`)"
+              echo "- \`AUTH_SESSION_SECRET\` — String acak minimal 32 karakter"
+              echo "- *(Opsional)* \`CLOUD_SQL_CONNECTION_NAME\` — Contoh: \`project:asia-south1:instance\`"
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Authenticate to Google Cloud
+        if: steps.check.outputs.configured == 'true'
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Setup Google Cloud CLI
+        if: steps.check.outputs.configured == 'true'
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Build and deploy full-stack service to Cloud Run
+        if: steps.check.outputs.configured == 'true'
+        id: deploy
+        env:
+          GCP_PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+          GCP_REGION: ${{ vars.GCP_REGION || 'asia-south1' }}
+          CLOUD_RUN_SERVICE: ${{ vars.CLOUD_RUN_SERVICE || 'kartini-exam-portal' }}
+          CLOUD_SQL_CONNECTION_NAME: ${{ secrets.CLOUD_SQL_CONNECTION_NAME }}
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SQL_HOST: ${{ secrets.SQL_HOST }}
+          SQL_USER: ${{ secrets.SQL_USER }}
+          SQL_PASSWORD: ${{ secrets.SQL_PASSWORD }}
+          SQL_DB_NAME: ${{ secrets.SQL_DB_NAME }}
+          AUTH_SESSION_SECRET: ${{ secrets.AUTH_SESSION_SECRET }}
+          CORS_ORIGIN: ${{ vars.CORS_ORIGIN || 'https://messtelevisi-glitch.github.io' }}
+        run: |
+          ENV_ARGS="NODE_ENV=production,CORS_ORIGIN=${CORS_ORIGIN}"
+          [ -n "$DATABASE_URL" ] && ENV_ARGS="${ENV_ARGS},DATABASE_URL=${DATABASE_URL}"
+          [ -n "$SQL_HOST" ] && ENV_ARGS="${ENV_ARGS},SQL_HOST=${SQL_HOST}"
+          [ -n "$SQL_USER" ] && ENV_ARGS="${ENV_ARGS},SQL_USER=${SQL_USER}"
+          [ -n "$SQL_PASSWORD" ] && ENV_ARGS="${ENV_ARGS},SQL_PASSWORD=${SQL_PASSWORD}"
+          [ -n "$SQL_DB_NAME" ] && ENV_ARGS="${ENV_ARGS},SQL_DB_NAME=${SQL_DB_NAME}"
+          [ -n "$AUTH_SESSION_SECRET" ] && ENV_ARGS="${ENV_ARGS},AUTH_SESSION_SECRET=${AUTH_SESSION_SECRET}"
+
+          EXTRA_FLAGS=""
+          if [ -n "$CLOUD_SQL_CONNECTION_NAME" ]; then
+            EXTRA_FLAGS="--add-cloudsql-instances=${CLOUD_SQL_CONNECTION_NAME}"
+          fi
+
+          gcloud run deploy "$CLOUD_RUN_SERVICE" \
+            --project="$GCP_PROJECT_ID" \
+            --region="$GCP_REGION" \
+            --source=. \
+            --allow-unauthenticated \
+            --port=3000 \
+            --set-env-vars="$ENV_ARGS" \
+            $EXTRA_FLAGS
+
+          SERVICE_URL=$(gcloud run services describe "$CLOUD_RUN_SERVICE" \
+            --project="$GCP_PROJECT_ID" \
+            --region="$GCP_REGION" \
+            --format='value(status.url)')
+
+          echo "url=${SERVICE_URL}" >> "$GITHUB_OUTPUT"
+          {
+            echo "### Google Cloud Run Deploy Berhasil"
+            echo "- **Live Full-Stack URL:** ${SERVICE_URL}"
+            echo "- **Health Check:** ${SERVICE_URL}/api/health"
+            echo "- Jika ingin menghubungkan GitHub Pages, set Repository Variable \`VITE_API_BASE_URL=${SERVICE_URL}\` lalu jalankan ulang **CI Build & Deploy Pages**."
+          } >> "$GITHUB_STEP_SUMMARY"

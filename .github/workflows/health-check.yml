@@ -1,0 +1,49 @@
+name: Live Portal & API Health Monitor
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check GitHub Pages frontend availability
+        run: |
+          PAGES_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          STATUS=$(curl -sS -o /tmp/pages.html -w "%{http_code}" "$PAGES_URL")
+          echo "Frontend status ($PAGES_URL): HTTP $STATUS"
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "- **GitHub Pages Frontend:** Online (HTTP ${STATUS}) — ${PAGES_URL}" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::GitHub Pages returned HTTP $STATUS"
+            echo "- **GitHub Pages Frontend:** HTTP ${STATUS} — ${PAGES_URL}" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Check live full-stack backend API & PostgreSQL health
+        env:
+          API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+        run: |
+          if [ -z "$API_BASE_URL" ]; then
+            {
+              echo "- **Backend API:** Belum dihubungkan (\`VITE_API_BASE_URL\` belum diisi di Repository Variables)."
+              echo "  Isi \`VITE_API_BASE_URL\` dengan URL Cloud Run / Render / Railway Anda agar monitoring backend aktif."
+            } >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          CLEAN_URL="${API_BASE_URL%/}"
+          HEALTH_STATUS=$(curl -sS -o /tmp/health.json -w "%{http_code}" "${CLEAN_URL}/api/health")
+          echo "Backend health (${CLEAN_URL}/api/health): HTTP ${HEALTH_STATUS}"
+          cat /tmp/health.json || true
+
+          if [ "$HEALTH_STATUS" -ne 200 ]; then
+            echo "::error::Backend health check failed with HTTP ${HEALTH_STATUS}"
+            exit 1
+          fi
+
+          echo "- **Backend API & PostgreSQL:** Healthy (HTTP 200) — ${CLEAN_URL}/api/health" >> "$GITHUB_STEP_SUMMARY"
