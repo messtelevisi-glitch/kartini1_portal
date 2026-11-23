@@ -65,8 +65,8 @@ async function handleResponse<T>(res: Response): Promise<T> {
       typeof data === 'object' && data && 'error' in data
         ? String((data as any).error)
         : `Request failed (${res.status})`;
-    if ((res.status === 404 || res.status === 405) && !contentType.includes('application/json') && !API_BASE_URL) {
-      msg = 'GitHub Pages hanya melayani tampilan statis (HTTP 405/404). Untuk login & database, deploy backend Node.js (Cloud Run/Render/Railway) lalu set VITE_API_BASE_URL atau akses langsung dari URL server full-stack.';
+    if ((res.status === 405 || (res.status === 404 && !API_BASE_URL)) && !contentType.includes('application/json')) {
+      msg = 'Server tujuan hanya melayani file statis (HTTP 405/404) dan tidak menjalankan backend API/PostgreSQL. Buka portal dari URL server Node.js (Cloud Run/Render/Railway), atau isi Repository Variable VITE_API_BASE_URL di GitHub dengan URL backend yang aktif.';
     }
     const err = new Error(msg) as Error & { status?: number; payload?: unknown };
     err.status = res.status;

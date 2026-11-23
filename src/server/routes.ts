@@ -34,7 +34,7 @@ import {
 } from '../db/schema.ts';
 import {
   assertSubjectAccess,
-  AuthenticatedRequest,
+  type AuthenticatedRequest,
   authenticateStaffToken,
   buildAuthUser,
   hashPassword,

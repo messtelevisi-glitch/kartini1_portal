@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { Request, Response, NextFunction } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 import { eq } from 'drizzle-orm';
 import { db } from '../db/index.ts';
 import { profiles, roles, subjects, teachers, teacherSubjects } from '../db/schema.ts';
