@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --color-navy: #243B64;
+  --color-cambridge: #376FA6;
+  --color-sky-soft: #EAF3FA;
+  --color-warm-white: #FAFBFD;
+  --color-soft-grey: #F1F4F8;
+  --color-teal-muted: #6EAAA1;
+  --color-gold-accent: #D7B56D;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-sans);
+    background-color: #FAFBFD;
+    color: #1E293B;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    text-wrap: balance;
+  }
+
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media print {
+  body {
+    background: #FFFFFF !important;
+  }
+  .no-print {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .admission-card-sheet {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

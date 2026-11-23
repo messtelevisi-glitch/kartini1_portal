@@ -1,0 +1,6 @@
+{
+  "name": "Kartini Exam Portal — SMP Kartini 1 Batam",
+  "description": "International-standard Computer-Based Examination (CBE) Management System for SMP Kartini 1 Batam.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
